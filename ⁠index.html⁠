@@ -1,0 +1,1383 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ภารกิจพิชิตสมรรถภาพทางกาย - FITNESS CHALLENGE</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600;700;800&family=Prompt:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        kanit: ['Kanit', 'sans-serif'],
+                        prompt: ['Prompt', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            orange: '#FF5722',
+                            cyan: '#00BCD4',
+                            emerald: '#10B981',
+                            gold: '#F59E0B',
+                            purple: '#8B5CF6',
+                            dark: '#0F172A',
+                            accent: '#EC4899'
+                        }
+                    },
+                    animation: {
+                        'bounce-short': 'bounce 0.5s ease-in-out 2',
+                        'pulse-fast': 'pulse 1s infinite',
+                        'spin-slow': 'spin 8s linear infinite',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Kanit', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #111827 100%);
+            color: #f8fafc;
+            min-height: 100vh;
+            user-select: none;
+        }
+
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.75);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+        }
+
+        .glass-card {
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.6);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #3b82f6;
+            border-radius: 4px;
+        }
+
+        /* 3D Interactive Dice */
+        .dice-container {
+            perspective: 1000px;
+        }
+        .dice {
+            width: 70px;
+            height: 70px;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 1s ease-out;
+            cursor: pointer;
+        }
+        .dice-face {
+            position: absolute;
+            width: 70px;
+            height: 70px;
+            background: linear-gradient(145deg, #ffffff, #e2e8f0);
+            border: 2px solid #94a3b8;
+            border-radius: 14px;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.1), 0 4px 10px rgba(0,0,0,0.3);
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            padding: 8px;
+            box-sizing: border-box;
+        }
+        .dot {
+            background-color: #1e293b;
+            border-radius: 50%;
+            align-self: center;
+            justify-self: center;
+            width: 11px;
+            height: 11px;
+            box-shadow: inset 0 2px 2px rgba(0,0,0,0.5);
+        }
+        .dot.red { background-color: #ef4444; }
+
+        .face-1 { transform: translateZ(35px); }
+        .face-2 { transform: rotateY(180deg) translateZ(35px); }
+        .face-3 { transform: rotateY(-90deg) translateZ(35px); }
+        .face-4 { transform: rotateY(90deg) translateZ(35px); }
+        .face-5 { transform: rotateX(90deg) translateZ(35px); }
+        .face-6 { transform: rotateX(-90deg) translateZ(35px); }
+
+        .player-pawn {
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            filter: drop-shadow(0px 4px 6px rgba(0, 0, 0, 0.6));
+        }
+
+        .tile-active {
+            box-shadow: 0 0 15px #3b82f6, inset 0 0 10px #60a5fa;
+            border-color: #93c5fd !important;
+        }
+
+        .glow-btn {
+            box-shadow: 0 0 20px rgba(245, 158, 11, 0.5);
+        }
+        .glow-btn:hover {
+            box-shadow: 0 0 30px rgba(245, 158, 11, 0.8);
+        }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen justify-between overflow-x-hidden">
+
+    <header class="glass-panel sticky top-0 z-30 px-4 py-3 flex justify-between items-center shadow-lg border-b border-slate-700/50">
+        <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-orange-500 to-amber-400 flex items-center justify-center text-white text-xl shadow-md">
+                <i class="fa-solid fa-trophy"></i>
+            </div>
+            <div>
+                <h1 class="font-bold text-lg md:text-xl text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-amber-300 to-cyan-400 leading-tight">
+                    ภารกิจพิชิตสมรรถภาพทางกาย
+                </h1>
+                <p class="text-xs text-slate-400 font-prompt tracking-wide">FITNESS CHALLENGE • สื่อการเรียนรู้พลศึกษา ม.1–ม.3</p>
+            </div>
+        </div>
+
+        <div class="flex items-center space-x-2 md:space-x-3">
+            <button id="btnSoundToggle" onclick="toggleSound()" class="p-2.5 rounded-xl glass-card hover:bg-slate-700 text-slate-300 transition" title="เปิด/ปิด เสียง">
+                <i id="soundIcon" class="fa-solid fa-volume-high"></i>
+            </button>
+            <button onclick="openModal('manualModal')" class="px-3 py-2 text-xs md:text-sm font-semibold rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white transition flex items-center gap-2 shadow">
+                <i class="fa-solid fa-book-open"></i> <span class="hidden md:inline">คู่มือการเล่น</span>
+            </button>
+            <button onclick="openModal('knowledgeModal')" class="px-3 py-2 text-xs md:text-sm font-semibold rounded-xl bg-purple-600 hover:bg-purple-500 text-white transition flex items-center gap-2 shadow">
+                <i class="fa-solid fa-graduation-cap"></i> <span class="hidden md:inline">คลังความรู้</span>
+            </button>
+            <button onclick="confirmReset()" class="px-3 py-2 text-xs md:text-sm font-semibold rounded-xl bg-rose-600 hover:bg-rose-500 text-white transition flex items-center gap-1.5 shadow">
+                <i class="fa-solid fa-rotate-left"></i> <span class="hidden sm:inline">เริ่มใหม่</span>
+            </button>
+        </div>
+    </header>
+
+    <main class="flex-grow p-2 md:p-6 max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        
+        <!-- BOARD CONTAINER (8 COLS) -->
+        <section class="lg:col-span-8 flex flex-col items-center">
+            
+            <!-- Turn & Game Info Header -->
+            <div class="w-full glass-panel rounded-2xl p-4 mb-4 flex flex-wrap justify-between items-center gap-3 border border-slate-700/60 shadow-lg">
+                <div class="flex items-center space-x-3">
+                    <div id="turnBadge" class="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl shadow-inner border-2 border-white/20 transition-all">
+                        ⚽
+                    </div>
+                    <div>
+                        <div class="text-xs text-slate-400 font-prompt">ตาของผู้เล่นปัจจุบัน</div>
+                        <div id="turnPlayerName" class="font-bold text-lg text-amber-300">กำลังเตรียมเกม...</div>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-4">
+                    <div class="text-right">
+                        <span class="text-xs text-slate-400 font-prompt block">รอบการเล่น</span>
+                        <span id="roundCounter" class="text-lg font-bold text-cyan-400">รอบที่ 1</span>
+                    </div>
+                    <div class="h-8 w-px bg-slate-700"></div>
+                    <div class="text-right">
+                        <span class="text-xs text-slate-400 font-prompt block">ผู้นำคะแนน</span>
+                        <span id="leaderName" class="text-lg font-bold text-emerald-400">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- BOARD CONTAINER GRAPHIC -->
+            <div class="w-full glass-panel rounded-3xl p-3 md:p-5 relative shadow-2xl overflow-hidden border border-slate-700/80">
+                <div id="boardGrid" class="grid grid-cols-6 sm:grid-cols-8 md:grid-cols-11 gap-1.5 md:gap-2.5 relative min-h-[480px] md:min-h-[560px]">
+                    
+                    <div class="absolute inset-[12%] sm:inset-[13%] md:inset-[12%] glass-card rounded-2xl z-10 flex flex-col items-center justify-between p-4 md:p-6 border border-slate-600/50 shadow-2xl bg-slate-900/90 text-center">
+                        
+                        <div class="space-y-1">
+                            <span class="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-gradient-to-r from-orange-500 to-amber-500 text-slate-950 shadow">
+                                ARENA CENTER
+                            </span>
+                            <h2 class="text-lg md:text-2xl font-extrabold text-white tracking-wide">ลานกิจกรรมท้าทาย</h2>
+                        </div>
+
+                        <!-- 3D Interactive Dice -->
+                        <div class="flex flex-col items-center my-2">
+                            <div class="dice-container my-2" onclick="rollDice()">
+                                <div id="dice" class="dice">
+                                    <div class="dice-face face-1"><span class="dot red font-bold" style="grid-area:2/2"></span></div>
+                                    <div class="dice-face face-2"><span class="dot" style="grid-area:1/1"></span><span class="dot" style="grid-area:3/3"></span></div>
+                                    <div class="dice-face face-3"><span class="dot" style="grid-area:1/1"></span><span class="dot" style="grid-area:2/2"></span><span class="dot" style="grid-area:3/3"></span></div>
+                                    <div class="dice-face face-4"><span class="dot" style="grid-area:1/1"></span><span class="dot" style="grid-area:1/3"></span><span class="dot" style="grid-area:3/1"></span><span class="dot" style="grid-area:3/3"></span></div>
+                                    <div class="dice-face face-5"><span class="dot" style="grid-area:1/1"></span><span class="dot" style="grid-area:1/3"></span><span class="dot" style="grid-area:2/2"></span><span class="dot" style="grid-area:3/1"></span><span class="dot" style="grid-area:3/3"></span></div>
+                                    <div class="dice-face face-6"><span class="dot" style="grid-area:1/1"></span><span class="dot" style="grid-area:1/3"></span><span class="dot" style="grid-area:2/1"></span><span class="dot" style="grid-area:2/3"></span><span class="dot" style="grid-area:3/1"></span><span class="dot" style="grid-area:3/3"></span></div>
+                                </div>
+                            </div>
+
+                            <button id="btnRollDice" onclick="rollDice()" class="mt-3 px-6 py-2.5 rounded-xl font-extrabold text-sm md:text-base bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 hover:from-amber-400 hover:to-rose-400 text-slate-950 transition-all transform hover:scale-105 active:scale-95 glow-btn flex items-center gap-2">
+                                <i class="fa-solid fa-dice text-lg"></i> ทอยลูกเต๋า
+                            </button>
+                        </div>
+
+                        <!-- Live Action Feed -->
+                        <div id="gameLog" class="w-full bg-slate-950/70 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-300 max-h-20 overflow-y-auto text-left font-prompt leading-relaxed shadow-inner">
+                            <p class="text-amber-400 font-semibold"><i class="fa-solid fa-bell text-xs mr-1"></i> ยินดีต้อนรับสู่เกมภารกิจพิชิตสมรรถภาพทางกาย!</p>
+                            <p class="text-slate-400">กดปุ่ม "ทอยลูกเต๋า" เพื่อเริ่มการผจญภัย</p>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Legend Bar -->
+            <div class="w-full glass-panel rounded-2xl p-3 mt-4 flex flex-wrap items-center justify-around gap-2 text-xs font-prompt text-slate-300">
+                <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-cyan-500"></span> ❓ คำถาม (+2)</span>
+                <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-emerald-500"></span> 🏃 ภารกิจ (+3)</span>
+                <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-amber-500"></span> 💪 ทดสอบ (+3)</span>
+                <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-purple-500"></span> ⭐ โบนัส (+1~3)</span>
+                <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-rose-500"></span> 🔥 FITNESS (+5)</span>
+                <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-indigo-500"></span> ⚡ SUPER SPORT</span>
+            </div>
+        </section>
+
+        <section class="lg:col-span-4 space-y-4">
+            
+            <div class="glass-panel rounded-3xl p-5 border border-slate-700/70 shadow-xl">
+                <div class="flex justify-between items-center mb-4 pb-2 border-b border-slate-700">
+                    <h3 class="font-bold text-lg text-white flex items-center gap-2">
+                        <i class="fa-solid fa-ranking-star text-amber-400"></i> ตารางคะแนนผู้เล่น
+                    </h3>
+                    <span id="playerCountBadge" class="text-xs bg-slate-800 text-slate-300 px-2.5 py-1 rounded-lg">
+                        0 คน
+                    </span>
+                </div>
+
+                <div id="playersList" class="space-y-3 max-h-[460px] overflow-y-auto pr-1">
+                    <!-- Dynamic player rows -->
+                </div>
+            </div>
+
+            <div class="glass-panel rounded-3xl p-4 border border-slate-700/60 bg-gradient-to-br from-slate-900/90 to-indigo-950/40">
+                <div class="flex items-start gap-3">
+                    <div class="p-2.5 bg-cyan-500/20 text-cyan-400 rounded-xl">
+                        <i class="fa-solid fa-lightbulb text-xl"></i>
+                    </div>
+                    <div class="text-xs space-y-1">
+                        <h4 class="font-bold text-sm text-cyan-300">เคล็ดลับการเรียนรู้พลศึกษา</h4>
+                        <p class="text-slate-300 font-prompt leading-relaxed">
+                            หลักการออกกำลังกาย <strong class="text-amber-300">FITT</strong> ประกอบด้วย: <br>
+                            <strong>F</strong>requency (ความถี่), <strong>I</strong>ntensity (ความหนัก), <br>
+                            <strong>T</strong>ime (เวลา) และ <strong>T</strong>ype (ชนิดการออกกำลังกาย)
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+    <div id="setupModal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 flex items-center justify-center p-4">
+        <div class="glass-card max-w-xl w-full rounded-3xl p-6 md:p-8 border border-slate-700 shadow-2xl relative">
+            
+            <div class="text-center space-y-2 mb-6">
+                <div class="w-16 h-16 bg-gradient-to-tr from-orange-500 to-amber-400 rounded-2xl mx-auto flex items-center justify-center text-3xl shadow-lg text-slate-950 mb-2">
+                    <i class="fa-solid fa-gamepad"></i>
+                </div>
+                <h2 class="text-2xl md:text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-amber-300 to-cyan-300">
+                    เตรียมความพร้อมการเล่น
+                </h2>
+                <p class="text-xs md:text-sm text-slate-300 font-prompt">
+                    ตั้งค่าจำนวนผู้เล่นและเลือกตัวเดินอุปกรณ์กีฬา (2–6 คน)
+                </p>
+            </div>
+
+            <div class="mb-6">
+                <label class="block text-sm font-semibold text-slate-300 mb-2 font-prompt">จำนวนผู้เล่น</label>
+                <div class="grid grid-cols-5 gap-2" id="numPlayersSelector">
+                    <button type="button" onclick="setPlayerCount(2)" class="player-cnt-btn py-2.5 rounded-xl font-bold bg-slate-800 hover:bg-cyan-600 text-white transition border border-slate-700">2 คน</button>
+                    <button type="button" onclick="setPlayerCount(3)" class="player-cnt-btn py-2.5 rounded-xl font-bold bg-cyan-600 text-white border border-cyan-400 transition">3 คน</button>
+                    <button type="button" onclick="setPlayerCount(4)" class="player-cnt-btn py-2.5 rounded-xl font-bold bg-slate-800 hover:bg-cyan-600 text-white transition border border-slate-700">4 คน</button>
+                    <button type="button" onclick="setPlayerCount(5)" class="player-cnt-btn py-2.5 rounded-xl font-bold bg-slate-800 hover:bg-cyan-600 text-white transition border border-slate-700">5 คน</button>
+                    <button type="button" onclick="setPlayerCount(6)" class="player-cnt-btn py-2.5 rounded-xl font-bold bg-slate-800 hover:bg-cyan-600 text-white transition border border-slate-700">6 คน</button>
+                </div>
+            </div>
+
+            <div id="playerInputsContainer" class="space-y-3 max-h-60 overflow-y-auto pr-2 mb-6">
+                <!-- Dynamic forms -->
+            </div>
+
+            <button onclick="startGame()" class="w-full py-3.5 rounded-2xl font-extrabold text-lg bg-gradient-to-r from-orange-500 via-amber-500 to-emerald-500 hover:from-orange-400 hover:to-emerald-400 text-slate-950 shadow-xl transition transform active:scale-95 flex items-center justify-center gap-2">
+                <i class="fa-solid fa-play"></i> เริ่มการผจญภัยภารกิจ!
+            </button>
+        </div>
+    </div>
+
+    <div id="questionModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+        <div class="glass-card max-w-lg w-full rounded-3xl p-6 border border-cyan-500/40 shadow-2xl relative">
+            <div class="flex justify-between items-center mb-4">
+                <span class="px-3 py-1 rounded-full text-xs font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
+                    ❓ การ์ดคำถามความรู้พลศึกษา (+2 คะแนน)
+                </span>
+                <span id="questionTopic" class="text-xs font-semibold text-slate-400 font-prompt">หมวด: สมรรถภาพทางกาย</span>
+            </div>
+
+            <h3 id="questionText" class="text-base md:text-lg font-bold text-white mb-5 leading-relaxed">
+                คำถามจะแสดงที่นี่...
+            </h3>
+
+            <div id="questionOptions" class="space-y-2.5 mb-5">
+                <!-- Options -->
+            </div>
+
+            <div id="questionFeedback" class="hidden p-3 rounded-xl text-xs md:text-sm font-prompt leading-relaxed mb-4"></div>
+
+            <button id="btnConfirmQuestion" onclick="closeQuestionModal()" class="hidden w-full py-2.5 rounded-xl font-bold bg-cyan-600 hover:bg-cyan-500 text-white transition">
+                รับทราบ / ตกลง
+            </button>
+        </div>
+    </div>
+
+    <div id="missionModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+        <div class="glass-card max-w-lg w-full rounded-3xl p-6 border border-emerald-500/40 shadow-2xl relative text-center">
+            <div class="w-16 h-16 bg-emerald-500/20 text-emerald-400 rounded-2xl mx-auto flex items-center justify-center text-3xl mb-3 border border-emerald-500/30">
+                <i id="missionIcon" class="fa-solid fa-person-running"></i>
+            </div>
+            
+            <span id="missionBadge" class="px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                🏃 ภารกิจท้าทายกายภาพ (+3 คะแนน)
+            </span>
+
+            <h3 id="missionTitle" class="text-xl font-extrabold text-white my-3">
+                ชื่อภารกิจ
+            </h3>
+            
+            <p id="missionDesc" class="text-sm text-slate-200 font-prompt mb-4 leading-relaxed bg-slate-900/60 p-4 rounded-2xl border border-slate-800">
+                คำอธิบายภารกิจทางกายภาพที่ปลอดภัย...
+            </p>
+
+            <div id="timerContainer" class="mb-5 hidden">
+                <div class="text-2xl font-extrabold text-amber-400 font-mono" id="missionTimer">15</div>
+                <div class="text-xs text-slate-400 font-prompt">วินาทีในการปฏิบัติ</div>
+            </div>
+
+            <div class="flex gap-3 justify-center">
+                <button id="btnStartTimer" onclick="startMissionTimer()" class="px-5 py-2.5 rounded-xl font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 transition flex items-center gap-2">
+                    <i class="fa-solid fa-stopwatch"></i> เริ่มจับเวลา
+                </button>
+                <button onclick="completeMission(true)" class="px-6 py-2.5 rounded-xl font-bold bg-emerald-500 hover:bg-emerald-400 text-slate-950 transition flex items-center gap-2">
+                    <i class="fa-solid fa-check"></i> ทำสำเร็จแล้ว
+                </button>
+                <button onclick="completeMission(false)" class="px-4 py-2.5 rounded-xl font-bold bg-slate-700 hover:bg-slate-600 text-slate-300 transition">
+                    ข้าม
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="bonusModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+        <div class="glass-card max-w-md w-full rounded-3xl p-6 border border-amber-500/40 shadow-2xl text-center">
+            <div id="bonusIconBox" class="w-16 h-16 bg-amber-500/20 text-amber-400 rounded-2xl mx-auto flex items-center justify-center text-3xl mb-3 border border-amber-500/30">
+                <i class="fa-solid fa-star"></i>
+            </div>
+            
+            <h3 id="bonusTitle" class="text-xl font-extrabold text-amber-300 mb-2">ช่องโบนัสพิเศษ!</h3>
+            <p id="bonusMessage" class="text-sm text-slate-200 font-prompt mb-6 leading-relaxed">คุณได้รับคะแนนพิเศษเพิ่มเติม!</p>
+
+            <button onclick="closeBonusModal()" class="w-full py-3 rounded-xl font-bold bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 transition">
+                ยอดเยี่ยม!
+            </button>
+        </div>
+    </div>
+
+    <div id="manualModal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+        <div class="glass-card max-w-2xl w-full rounded-3xl p-6 border border-slate-700 shadow-2xl max-h-[85vh] flex flex-col">
+            <div class="flex justify-between items-center mb-4 pb-2 border-b border-slate-700">
+                <h3 class="text-xl font-bold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-book-open text-cyan-400"></i> คู่มือการเล่นและกติกา
+                </h3>
+                <button onclick="closeModal('manualModal')" class="text-slate-400 hover:text-white text-xl">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="overflow-y-auto space-y-4 text-xs md:text-sm text-slate-300 font-prompt pr-2 leading-relaxed">
+                <div class="bg-slate-900/70 p-4 rounded-2xl border border-slate-800">
+                    <h4 class="font-bold text-cyan-300 text-base mb-1">🎯 เป้าหมายของเกม</h4>
+                    <p>ให้นักเรียนเรียนรู้เรื่องสมรรถภาพทางกาย 14 หัวข้อ ผ่านการเล่นเกมตอบคำถาม ท้าทายภารกิจทางกาย และสะสมคะแนน โดยผู้ที่มีคะแนนรวมสูงสุดเมื่อมีผู้เล่นถึงจุด FINISH จะเป็นผู้ชนะ!</p>
+                </div>
+
+                <div class="space-y-2">
+                    <h4 class="font-bold text-amber-300 text-base">🎲 ขั้นตอนการเล่น</h4>
+                    <ol class="list-decimal list-inside space-y-1.5 text-slate-300">
+                        <li>ผู้เล่นผลัดกันทอยลูกเต๋าเพื่อเคลื่อนที่อุปกรณ์กีฬาไปตามช่องกระดาน</li>
+                        <li>เมื่อตกช่องใด ให้ปฏิบัติตามกิจกรรมของช่องนั้นๆ</li>
+                        <li><strong>ช่องคำถาม (❓):</strong> ตอบคำถามเกี่ยวกับสมรรถภาพทางกาย ถูกได้ +2 คะแนน</li>
+                        <li><strong>ช่องภารกิจ (🏃):</strong> ปฏิบัติภารกิจเคลื่อนไหวที่ปลอดภัย สำเร็จได้ +3 คะแนน</li>
+                        <li><strong>ช่องทดสอบ (💪):</strong> ตอบคำถามทดสอบสมรรถภาพ สำเร็จได้ +3 คะแนน</li>
+                        <li><strong>ช่องโบนัส (⭐):</strong> สุ่มรับคะแนนพิเศษ 1–3 คะแนน</li>
+                        <li><strong>FITNESS CHALLENGE (🔥):</strong> ภารกิจพิเศษรับ +5 คะแนน</li>
+                        <li><strong>SUPER SPORT (⚡):</strong> ช่องสิทธิ์พิเศษเดินหน้า/โบนัสคู่</li>
+                    </ol>
+                </div>
+
+                <div class="bg-slate-900/70 p-4 rounded-2xl border border-slate-800">
+                    <h4 class="font-bold text-emerald-300 text-base mb-1">🏆 การสรุปผลคะแนน</h4>
+                    <ul class="list-disc list-inside space-y-1">
+                        <li>คะแนนด้านความรู้ (การตอบคำถามถูก)</li>
+                        <li>คะแนนด้านการปฏิบัติภารกิจทางกาย</li>
+                        <li>คะแนนโบนัสและภารกิจพิเศษ</li>
+                    </ul>
+                </div>
+            </div>
+
+            <button onclick="closeModal('manualModal')" class="mt-4 w-full py-2.5 rounded-xl font-bold bg-slate-700 hover:bg-slate-600 text-white transition">
+                เข้าใจแล้ว ปิดหน้าต่าง
+            </button>
+        </div>
+    </div>
+
+    <div id="knowledgeModal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+        <div class="glass-card max-w-3xl w-full rounded-3xl p-6 border border-slate-700 shadow-2xl max-h-[85vh] flex flex-col">
+            <div class="flex justify-between items-center mb-4 pb-2 border-b border-slate-700">
+                <h3 class="text-xl font-bold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-graduation-cap text-purple-400"></i> คลังความรู้สมรรถภาพทางกาย (ม.1–ม.3)
+                </h3>
+                <button onclick="closeModal('knowledgeModal')" class="text-slate-400 hover:text-white text-xl">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="overflow-y-auto space-y-3 font-prompt text-xs md:text-sm text-slate-300 pr-2">
+                <div class="p-3 bg-slate-900/80 rounded-xl border border-slate-800">
+                    <h5 class="font-bold text-purple-300 mb-1">1. สมรรถภาพทางกาย (Physical Fitness)</h5>
+                    <p class="text-slate-400">ความสามารถของร่างกายในการสู้ทนต่อการทำงานหรือประกอบกิจกรรมประจำวันได้อย่างมีประสิทธิภาพ โดยไม่เหนื่อยล้าจนเกินไป</p>
+                </div>
+                <div class="p-3 bg-slate-900/80 rounded-xl border border-slate-800">
+                    <h5 class="font-bold text-cyan-300 mb-1">2. ความแข็งแรงของกล้ามเนื้อ (Muscular Strength)</h5>
+                    <p class="text-slate-400">แรงสูงสุดที่กล้ามเนื้อสามารถหดตัวทำงานได้ในหนึ่งครั้ง เช่น การยกของหนัก, การดันพื้น 1 ครั้งเต็มแรง</p>
+                </div>
+                <div class="p-3 bg-slate-900/80 rounded-xl border border-slate-800">
+                    <h5 class="font-bold text-emerald-300 mb-1">3. ความอดทนของกล้ามเนื้อ (Muscular Endurance)</h5>
+                    <p class="text-slate-400">ความสามารถของกล้ามเนื้อในการทำงานซ้ำๆ ติดต่อกันเป็นเวลานาน เช่น การลุกนั่ง (Sit-up) 1 นาที</p>
+                </div>
+                <div class="p-3 bg-slate-900/80 rounded-xl border border-slate-800">
+                    <h5 class="font-bold text-amber-300 mb-1">4. ความอดทนระบบหัวใจและหายใจ (Cardiorespiratory Endurance)</h5>
+                    <p class="text-slate-400">ความสามารถของหัวใจ ปอด และสืบฉีดเลือดในการส่งออกซิเจนไปเลี้ยงร่างกายขณะออกกำลังกายต่อเนื่อง เช่น การวิ่งระยะไกล 1,200 เมตร</p>
+                </div>
+                <div class="p-3 bg-slate-900/80 rounded-xl border border-slate-800">
+                    <h5 class="font-bold text-rose-300 mb-1">5. ความอ่อนตัว (Flexibility)</h5>
+                    <p class="text-slate-400">ความสามารถของข้อต่อในการเคลื่อนไหวได้อย่างกว้างขวาง ทดสอบด้วยท่า "นั่งงอตัวไปข้างหน้า" (Sit and Reach)</p>
+                </div>
+                <div class="p-3 bg-slate-900/80 rounded-xl border border-slate-800">
+                    <h5 class="font-bold text-indigo-300 mb-1">6. หลักการออกกำลังกาย FITT</h5>
+                    <p class="text-slate-400"><strong>F</strong>requency (3-5 วัน/สัปดาห์), <strong>I</strong>ntensity (ความหนักปานกลาง-หนัก), <strong>T</strong>ime (20-60 นาที/ครั้ง), <strong>T</strong>ype (แอโรบิก, แรงต้าน)</p>
+                </div>
+            </div>
+
+            <button onclick="closeModal('knowledgeModal')" class="mt-4 w-full py-2.5 rounded-xl font-bold bg-slate-700 hover:bg-slate-600 text-white transition">
+                ปิดคลังความรู้
+            </button>
+        </div>
+    </div>
+
+    <div id="winnerModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-lg z-50 hidden flex items-center justify-center p-4">
+        <div class="glass-card max-w-lg w-full rounded-3xl p-6 md:p-8 border border-amber-500/50 shadow-2xl text-center relative overflow-hidden">
+            <div class="w-20 h-20 bg-gradient-to-tr from-amber-400 to-orange-500 rounded-3xl mx-auto flex items-center justify-center text-4xl shadow-xl text-slate-950 mb-3 animate-bounce">
+                <i class="fa-solid fa-trophy"></i>
+            </div>
+
+            <span class="px-4 py-1.5 rounded-full text-xs font-extrabold bg-amber-500/20 text-amber-300 border border-amber-500/30 tracking-wider uppercase">
+                CHAMPION OF FITNESS
+            </span>
+
+            <h2 id="winnerTitleName" class="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-orange-400 to-yellow-200 my-2">
+                ผู้เล่น 1 ชนะเลิศ!
+            </h2>
+            <p class="text-xs md:text-sm text-slate-300 font-prompt mb-6">ขอแสดงความยินดีที่คุณสามารถพิชิตภารกิจและทำคะแนนได้สูงสุด!</p>
+
+            <div class="bg-slate-900/80 rounded-2xl p-4 border border-slate-800 mb-6">
+                <h4 class="font-bold text-sm text-slate-300 mb-3 text-left font-prompt">สรุปคะแนนรวมทั้งหมด</h4>
+                <div id="finalLeaderboardList" class="space-y-2">
+                    <!-- Dynamic summary -->
+                </div>
+            </div>
+
+            <button onclick="location.reload()" class="w-full py-3.5 rounded-2xl font-extrabold text-base bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 shadow-xl transition transform active:scale-95">
+                <i class="fa-solid fa-rotate-right"></i> เล่นใหม่อีกครั้ง
+            </button>
+        </div>
+    </div>
+
+    <footer class="glass-panel py-3 px-4 text-center text-xs text-slate-400 font-prompt border-t border-slate-800">
+        สื่อการเรียนการสอนรายวิชาสุขศึกษาและพลศึกษา • ระดับชั้นมัธยมศึกษาปีที่ 1–3 • FITNESS CHALLENGE
+    </footer>
+
+    <script>
+        
+        // --- Web Audio API Synthesizer ---
+        let soundEnabled = true;
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        let audioCtx = null;
+
+        function playSound(type) {
+            if (!soundEnabled) return;
+            try {
+                if (!audioCtx) audioCtx = new AudioCtx();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                const now = audioCtx.currentTime;
+
+                if (type === 'dice') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(300, now);
+                    osc.frequency.exponentialRampToValueAtTime(150, now + 0.1);
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+                    osc.start(now);
+                    osc.stop(now + 0.1);
+                } else if (type === 'correct') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(523.25, now);
+                    osc.frequency.setValueAtTime(659.25, now + 0.1);
+                    osc.frequency.setValueAtTime(783.99, now + 0.2);
+                    gain.gain.setValueAtTime(0.3, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+                    osc.start(now);
+                    osc.stop(now + 0.4);
+                } else if (type === 'wrong') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(220, now);
+                    osc.frequency.setValueAtTime(160, now + 0.15);
+                    gain.gain.setValueAtTime(0.3, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                    osc.start(now);
+                    osc.stop(now + 0.3);
+                } else if (type === 'fanfare') {
+                    [261.63, 329.63, 392.00, 523.25].forEach((freq, idx) => {
+                        const o = audioCtx.createOscillator();
+                        const g = audioCtx.createGain();
+                        o.connect(g);
+                        g.connect(audioCtx.destination);
+                        o.type = 'triangle';
+                        o.frequency.setValueAtTime(freq, now + idx * 0.12);
+                        g.gain.setValueAtTime(0.3, now + idx * 0.12);
+                        g.gain.exponentialRampToValueAtTime(0.01, now + idx * 0.12 + 0.3);
+                        o.start(now + idx * 0.12);
+                        o.stop(now + idx * 0.12 + 0.3);
+                    });
+                }
+            } catch (e) {
+                console.log("Audio not initialized yet");
+            }
+        }
+
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            const icon = document.getElementById('soundIcon');
+            if (soundEnabled) {
+                icon.className = 'fa-solid fa-volume-high text-cyan-400';
+            } else {
+                icon.className = 'fa-solid fa-volume-xmark text-rose-400';
+            }
+        }
+
+        const QUESTION_BANK = [
+            {
+                topic: "ความหมายของสมรรถภาพทางกาย",
+                question: "สมรรถภาพทางกาย (Physical Fitness) หมายถึงข้อใดถูกต้องที่สุด?",
+                options: [
+                    "ความสามารถของร่างกายในการประกอบกิจกรรมประจำวันได้อย่างมีประสิทธิภาพโดยไม่เหนื่อยล้าเกินไป",
+                    "การเล่นกีฬาได้เก่งกว่าผู้อื่นในทุกประเภท",
+                    "การมีกล้ามเนื้อขนาดใหญ่เหมือนนักเพาะกาย",
+                    "การที่ไม่เคยเจ็บป่วยด้วยโรคติดต่อเลย"
+                ],
+                answer: 0,
+                explain: "สมรรถภาพทางกายคือความพร้อมของร่างกายในการทำกิจกรรมได้อย่างดีและเหลือพลังงานไว้ใช้ในภาวะฉุกเฉิน"
+            },
+            {
+                topic: "ความแข็งแรงของกล้ามเนื้อ",
+                question: "การทดสอบใดเหมาะสำหรับวัด 'ความแข็งแรงของกล้ามเนื้อ' แรงสูงสุดใน 1 ครั้ง?",
+                options: [
+                    "การวิ่งระยะไกล 1,200 เมตร",
+                    "การยกน้ำหนักสูงสุดที่ยกได้ 1 ครั้ง (1RM)",
+                    "การนั่งงอตัวไปข้างหน้า",
+                    "การยืนทรงตัวขาเดียว"
+                ],
+                answer: 1,
+                explain: "ความแข็งแรงของกล้ามเนื้อคือการออกแรงสูงสุดของกล้ามเนื้อในครั้งเดียว"
+            },
+            {
+                topic: "ความอดทนของกล้ามเนื้อ",
+                question: "การดันพื้น (Push-ups) หรือลุกนั่ง (Sit-ups) ต่อเนื่อง 1 นาที เป็นการทดสอบสมรรถภาพด้านใด?",
+                options: [
+                    "ความอ่อนตัว",
+                    "ความอดทนของกล้ามเนื้อ",
+                    "การทรงตัว",
+                    "ความเร็ว"
+                ],
+                answer: 1,
+                explain: "ความอดทนของกล้ามเนื้อคือความสามารถในการหดตัวทำงานซ้ำๆ ติดต่อกันเป็นเวลานาน"
+            },
+            {
+                topic: "ความอดทนระบบหัวใจและหายใจ",
+                question: "กิจกรรมในข้อใดส่งเสริมความอดทนของระบบหัวใจและระบบหายใจได้ดีที่สุด?",
+                options: [
+                    "การวิ่งแอโรบิกต่อเนื่อง 30 นาที",
+                    "การยกลูกดัมเบลหนักๆ 3 ครั้ง",
+                    "การยืดเหยียดกล้ามเนื้อต้นขา",
+                    "การยืนเขย่งปลายเท้า"
+                ],
+                answer: 0,
+                explain: "การออกกำลังกายแบบแอโรบิกต่อเนื่อง ช่วยพัฒนาปอด หัวใจ และระบบหมุนเวียนเลือด"
+            },
+            {
+                topic: "ความอ่อนตัว",
+                question: "การทดสอบ 'นั่งงอตัวไปข้างหน้า' (Sit and Reach) ใช้วัดสมรรถภาพทางกายด้านใด?",
+                options: [
+                    "ความคล่องแคล่วว่องไว",
+                    "ความอ่อนตัว",
+                    "ความแข็งแรงของหลัง",
+                    "การประสานสัมพันธ์"
+                ],
+                answer: 1,
+                explain: "การนั่งงอตัวไปข้างหน้าใช้วัดความอ่อนตัวของข้อต่อสะโพกและกล้ามเนื้อต้นขาด้านหลัง"
+            },
+            {
+                topic: "หลักการ FITT",
+                question: "อักษร 'I' ในหลักการออกกำลังกาย FITT ย่อมาจากคำว่าอะไร?",
+                options: [
+                    "Interval (ช่วงพัก)",
+                    "Intensity (ความหนักในการออกกำลังกาย)",
+                    "Increase (การเพิ่มระดับ)",
+                    "Illness (ความเจ็บป่วย)"
+                ],
+                answer: 1,
+                explain: "FITT ย่อมาจาก Frequency (ความถี่), Intensity (ความหนัก), Time (เวลา), และ Type (ชนิด)"
+            },
+            {
+                topic: "การอบอุ่นร่างกายและคลายร่างกาย",
+                question: "การอบอุ่นร่างกาย (Warm-up) ก่อนออกกำลังกาย มีประโยชน์หลักตามข้อใด?",
+                options: [
+                    "เพิ่มอุณหภูมิร่างกายและเตรียมความพร้อมของกล้ามเนื้อป้องกันการบาดเจ็บ",
+                    "ช่วยให้ร่างกายสะสมไขมันได้มากขึ้น",
+                    "ทำให้ไม่ต้องดื่มน้ำเลยตลอดการเล่นกีฬา",
+                    "เพิ่มความอดทนโดยไม่ต้องฝึกซ้อม"
+                ],
+                answer: 0,
+                explain: "Warm-up ช่วยเพิ่มอัตราการเต้นหัวใจ เพิ่มการไหลเวียนเลือด และลดความเสี่ยงต่อการบาดเจ็บ"
+            },
+            {
+                topic: "ความคล่องแคล่วว่องไว",
+                question: "การวิ่งเก็บของ (Shuttle Run) เป็นการทดสอบสมรรถภาพด้านใด?",
+                options: [
+                    "ความอ่อนตัว",
+                    "ความคล่องแคล่วว่องไว (Agility)",
+                    "ความอดทนของปอด",
+                    "การทรงตัวแบบนิ่ง"
+                ],
+                answer: 1,
+                explain: "ความคล่องแคล่วว่องไวคือความสามารถในการเปลี่ยนทิศทางของร่างกายได้อย่างเร็วและแม่นยำ"
+            },
+            {
+                topic: "การทรงตัว",
+                question: "ข้อใดคือตัวอย่างของการทรงตัวแบบเคลื่อนที่ (Dynamic Balance)?",
+                options: [
+                    "การยืนขาเดียวหลับตา",
+                    "การเดินบนคานทรงตัว",
+                    "การนั่งสมาธิ",
+                    "การนอนท่าแพลงก์"
+                ],
+                answer: 1,
+                explain: "การเดินบนคานทรงตัวเป็นการรักษาความสมดุลของร่างกายขณะมีการเคลื่อนที่"
+            },
+            {
+                topic: "การประสานสัมพันธ์",
+                question: "การเดาะลูกปิงปองหรือการกระโดดเชือกสัมพันธ์กับสมรรถภาพด้านใดมากที่สุด?",
+                options: [
+                    "การประสานสัมพันธ์ (Coordination)",
+                    "ความอ่อนตัว",
+                    "ความอดทนของกล้ามเนื้อแกนกลาง",
+                    "อุณหภูมิร่างกาย"
+                ],
+                answer: 0,
+                explain: "Coordination คือการทำงานร่วมกันอย่างราบรื่นระหว่างสายตา มือ และเท้า"
+            },
+            {
+                topic: "การดูแลสุขภาพอย่างปลอดภัย",
+                question: "เพราะเหตุใดจึงควรจิบน้ำอย่างสม่ำเสมอก่อนและระหว่างการออกกำลังกาย?",
+                options: [
+                    "เพื่อทดแทนน้ำที่สูญเสียไปทางเหงื่อและป้องกันภาวะลมแดด (Heat Stroke)",
+                    "เพื่อเพิ่มน้ำหนักตัวให้ชกมวยได้ดีขึ้น",
+                    "เพื่อทำให้ปอดทำงานช้าลง",
+                    "เพื่อให้กล้ามเนื้อขยายใหญ่ทันที"
+                ],
+                answer: 0,
+                explain: "การดื่มน้ำช่วยรักษาอุณหภูมิร่างกายและป้องกันภาวะขาดน้ำขณะออกกำลังกาย"
+            },
+            {
+                topic: "ประโยชน์ของสมรรถภาพทางกาย",
+                question: "ผู้ที่มีสมรรถภาพทางกายดี จะได้รับประโยชน์อย่างไรในชีวิตประจำวัน?",
+                options: [
+                    "เรียนและทำกิจกรรมต่างๆ ได้อย่างสดชื่น เหนื่อยยาก และฟื้นตัวเร็ว",
+                    "ไม่ต้องรับประทานอาหารเลยก็มีพลังงาน",
+                    "นอนหลับได้น้อยลงเหลือวันละ 2 ชั่วโมง",
+                    "ไม่มีวันเจ็บป่วยจากเชื้อไวรัสใดๆ"
+                ],
+                answer: 0,
+                explain: "สมรรถภาพทางกายที่ดีช่วยเพิ่มประสิทธิภาพในการทำงานและการดำเนินชีวิตประจำวันอย่างสดชื่น"
+            }
+        ];
+
+        const MISSION_BANK = [
+            {
+                title: "กระโดดตบ (Jumping Jacks)",
+                desc: "ปฏิบัติท่ากระโดดตบอย่างถูกต้อง จำนวน 10 ครั้ง เพื่อกระตุ้นระบบการไหลเวียนเลือด",
+                time: 15,
+                icon: "fa-person-running"
+            },
+            {
+                title: "ย่อตัว สควอท (Squat)",
+                desc: "ปฏิบัติตำแหน่งสควอท หลังตรง ย่อเข่าไม่เกินปลายเท้า 10 ครั้ง เพื่อสร้างความแข็งแรงกล้ามเนื้อขา",
+                time: 20,
+                icon: "fa-child"
+            },
+            {
+                title: "วิ่งอยู่กับที่ (High Knees)",
+                desc: "ยกเข่าสูงวิ่งอยู่กับที่สม่ำเสมอ เป็นเวลา 20 วินาที เพื่อทดสอบความอดทนระบบหัวใจ",
+                time: 20,
+                icon: "fa-person-walking"
+            },
+            {
+                title: "ยืนทรงตัวขาเดียว (Single Leg Balance)",
+                desc: "ยืนทรงตัวด้วยขาข้างเดียว กางแขนออก ค้างไว้ 15 วินาที โดยไม่ให้เท้าอีกข้างแตะพื้น",
+                time: 15,
+                icon: "fa-child-reaching"
+            },
+            {
+                title: "ยืดเหยียดงอตัวสัมผัสปลายเท้า",
+                desc: "ยืนตรง ก้มตัวลงช้าๆ นำมือแตะปลายเท้า ค้างไว้ 10 วินาที โดยไม่พับเข่า เพื่อทดสอบความอ่อนตัว",
+                time: 10,
+                icon: "fa-person-dots-from-line"
+            },
+            {
+                title: "ท่าอบอุ่นร่างกายยอดฮิต",
+                desc: "แสดงท่าอบอุ่นร่างกาย (Warm-up) 1 ท่า (เช่น หมุนแขน, หมุนข้อเท้า) พร้อมบอกประโยชน์",
+                time: 15,
+                icon: "fa-heart-pulse"
+            },
+            {
+                title: "ดันพื้นกับผนัง/พื้น (Push-ups)",
+                desc: "ทำท่าดันพื้น (Push-ups) จำนวน 8 ครั้ง เพื่อเสริมสร้างกล้ามเนื้อแขนและหน้าอก",
+                time: 20,
+                icon: "fa-dumbbell"
+            }
+        ];
+
+        const BOARD_TILES = [
+            { id: 0, name: "START", type: "START", icon: "🚩", bg: "bg-emerald-600" },
+            { id: 1, name: "คำถามความรู้", type: "QUESTION", icon: "❓", bg: "bg-cyan-900/80" },
+            { id: 2, name: "ภารกิจท้าทาย", type: "MISSION", icon: "🏃", bg: "bg-emerald-900/80" },
+            { id: 3, name: "โบนัสสุขภาพ", type: "BONUS", icon: "⭐", bg: "bg-amber-900/80" },
+            { id: 4, name: "คำถามความรู้", type: "QUESTION", icon: "❓", bg: "bg-cyan-900/80" },
+            { id: 5, name: "พักผ่อน", type: "REST", icon: "🛌", bg: "bg-slate-800" },
+            { id: 6, name: "เดินหน้า +2", type: "FORWARD", icon: "⏩", bg: "bg-indigo-900/80" },
+            { id: 7, name: "ทดสอบสมรรถภาพ", type: "TEST", icon: "💪", bg: "bg-amber-800/80" },
+            { id: 8, name: "ภารกิจท้าทาย", type: "MISSION", icon: "🏃", bg: "bg-emerald-900/80" },
+            { id: 9, name: "คำถามความรู้", type: "QUESTION", icon: "❓", bg: "bg-cyan-900/80" },
+            
+            { id: 10, name: "FITNESS CHALLENGE", type: "FITNESS", icon: "🔥", bg: "bg-rose-800/90" },
+            { id: 11, name: "สุ่มภารกิจ", type: "RANDOM", icon: "🎲", bg: "bg-purple-900/80" },
+            { id: 12, name: "คำถามความรู้", type: "QUESTION", icon: "❓", bg: "bg-cyan-900/80" },
+            { id: 13, name: "ถอยหลัง -1", type: "BACKWARD", icon: "🔄", bg: "bg-rose-950/80" },
+            { id: 14, name: "โบนัสพิเศษ", type: "BONUS", icon: "⭐", bg: "bg-amber-900/80" },
+            { id: 15, name: "ภารกิจท้าทาย", type: "MISSION", icon: "🏃", bg: "bg-emerald-900/80" },
+            { id: 16, name: "SUPER SPORT", type: "SUPER", icon: "⚡", bg: "bg-cyan-800/90" },
+            { id: 17, name: "คำถามความรู้", type: "QUESTION", icon: "❓", bg: "bg-cyan-900/80" },
+
+            { id: 18, name: "พักผ่อน", type: "REST", icon: "🛌", bg: "bg-slate-800" },
+            { id: 19, name: "ทดสอบสมรรถภาพ", type: "TEST", icon: "💪", bg: "bg-amber-800/80" },
+            { id: 20, name: "คำถามความรู้", type: "QUESTION", icon: "❓", bg: "bg-cyan-900/80" },
+            { id: 21, name: "ภารกิจท้าทาย", type: "MISSION", icon: "🏃", bg: "bg-emerald-900/80" },
+            { id: 22, name: "เดินหน้า +3", type: "FORWARD", icon: "⏩", bg: "bg-indigo-900/80" },
+            { id: 23, name: "โบนัสสุขภาพ", type: "BONUS", icon: "⭐", bg: "bg-amber-900/80" },
+            { id: 24, name: "FITNESS CHALLENGE", type: "FITNESS", icon: "🔥", bg: "bg-rose-800/90" },
+            { id: 25, name: "คำถามความรู้", type: "QUESTION", icon: "❓", bg: "bg-cyan-900/80" },
+
+            { id: 26, name: "สุ่มภารกิจ", type: "RANDOM", icon: "🎲", bg: "bg-purple-900/80" },
+            { id: 27, name: "ภารกิจท้าทาย", type: "MISSION", icon: "🏃", bg: "bg-emerald-900/80" },
+            { id: 28, name: "ถอยหลัง -2", type: "BACKWARD", icon: "🔄", bg: "bg-rose-950/80" },
+            { id: 29, name: "คำถามความรู้", type: "QUESTION", icon: "❓", bg: "bg-cyan-900/80" },
+            { id: 30, name: "SUPER SPORT", type: "SUPER", icon: "⚡", bg: "bg-cyan-800/90" },
+            { id: 31, name: "ทดสอบสมรรถภาพ", type: "TEST", icon: "💪", bg: "bg-amber-800/80" },
+            { id: 32, name: "คำถามความรู้", type: "QUESTION", icon: "❓", bg: "bg-cyan-900/80" },
+            { id: 33, name: "โบนัสโชคดี", type: "BONUS", icon: "⭐", bg: "bg-amber-900/80" },
+            { id: 34, name: "ภารกิจท้าทาย", type: "MISSION", icon: "🏃", bg: "bg-emerald-900/80" },
+            { id: 35, name: "FINISH", type: "FINISH", icon: "🏆", bg: "bg-gradient-to-tr from-amber-500 to-yellow-300 text-slate-950 font-bold" }
+        ];
+
+        const SPORT_AVATARS = [
+            { icon: "⚽", name: "ฟุตบอล", color: "from-blue-500 to-indigo-600" },
+            { icon: "🏀", name: "บาสเกตบอล", color: "from-orange-500 to-amber-600" },
+            { icon: "🏐", name: "วอลเลย์บอล", color: "from-amber-400 to-yellow-500" },
+            { icon: "👟", name: "รองเท้าวิ่ง", color: "from-emerald-500 to-teal-600" },
+            { icon: "📣", name: "นกหวีด", color: "from-purple-500 to-pink-600" },
+            { icon: "🏋️", name: "ดัมเบล", color: "from-rose-500 to-red-600" }
+        ];
+
+        let players = [];
+        let selectedPlayerCount = 3;
+        let currentTurnIndex = 0;
+        let roundNumber = 1;
+        let isRolling = false;
+        let currentQuestion = null;
+        let currentMission = null;
+        let timerInterval = null;
+
+        window.onload = function() {
+            setPlayerCount(3);
+            renderBoardGrid();
+        };
+
+        function setPlayerCount(count) {
+            selectedPlayerCount = count;
+            
+            const buttons = document.querySelectorAll('.player-cnt-btn');
+            buttons.forEach((btn, idx) => {
+                const c = idx + 2;
+                if (c === count) {
+                    btn.className = "player-cnt-btn py-2.5 rounded-xl font-bold bg-cyan-600 text-white border border-cyan-400 transition";
+                } else {
+                    btn.className = "player-cnt-btn py-2.5 rounded-xl font-bold bg-slate-800 hover:bg-cyan-600 text-white transition border border-slate-700";
+                }
+            });
+
+            const container = document.getElementById('playerInputsContainer');
+            container.innerHTML = '';
+
+            for (let i = 0; i < count; i++) {
+                const avatar = SPORT_AVATARS[i % SPORT_AVATARS.length];
+                const div = document.createElement('div');
+                div.className = "flex items-center gap-3 bg-slate-900/80 p-3 rounded-2xl border border-slate-800";
+                div.innerHTML = `
+                    <div class="text-2xl w-10 h-10 rounded-xl bg-gradient-to-tr ${avatar.color} flex items-center justify-center shadow">
+                        ${avatar.icon}
+                    </div>
+                    <div class="flex-grow">
+                        <label class="block text-xs text-slate-400 font-prompt">ชื่อผู้เล่น ${i + 1}</label>
+                        <input type="text" id="playerNameInput_${i}" value="นักกีฬา ${i + 1}" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1 text-sm text-white focus:outline-none focus:border-cyan-400 font-prompt">
+                    </div>
+                `;
+                container.appendChild(div);
+            }
+        }
+
+        function startGame() {
+            players = [];
+            for (let i = 0; i < selectedPlayerCount; i++) {
+                const nameInput = document.getElementById(`playerNameInput_${i}`);
+                const name = nameInput ? (nameInput.value.trim() || `ผู้เล่น ${i + 1}`) : `ผู้เล่น ${i + 1}`;
+                const avatar = SPORT_AVATARS[i % SPORT_AVATARS.length];
+
+                players.push({
+                    id: i,
+                    name: name,
+                    icon: avatar.icon,
+                    color: avatar.color,
+                    position: 0,
+                    score: {
+                        knowledge: 0,
+                        mission: 0,
+                        bonus: 0,
+                        total: 0
+                    }
+                });
+            }
+
+            currentTurnIndex = 0;
+            roundNumber = 1;
+            closeModal('setupModal');
+            updateTurnDisplay();
+            updateLeaderboard();
+            renderBoardPawns();
+            logMessage(`🎮 เกมเริ่มต้นขึ้นแล้ว! มีผู้เล่นเข้าร่วม ${players.length} คน`, 'text-cyan-400 font-bold');
+        }
+
+        function renderBoardGrid() {
+            const grid = document.getElementById('boardGrid');
+            const centerArena = grid.querySelector('.absolute');
+            grid.innerHTML = '';
+            if (centerArena) grid.appendChild(centerArena);
+
+            const coords = getPerimeterCoordinates(36);
+
+            BOARD_TILES.forEach((tile, idx) => {
+                const pos = coords[idx];
+                const tileDiv = document.createElement('div');
+                tileDiv.id = `tile_${idx}`;
+                tileDiv.style.gridColumn = pos.col;
+                tileDiv.style.gridRow = pos.row;
+                tileDiv.className = `${tile.bg} rounded-xl md:rounded-2xl p-1 md:p-2 border border-slate-700/80 flex flex-col items-center justify-center text-center relative transition-all duration-300 shadow-md hover:scale-105 cursor-pointer select-none min-h-[55px] md:min-h-[65px]`;
+
+                tileDiv.innerHTML = `
+                    <span class="text-base md:text-xl leading-none">${tile.icon}</span>
+                    <span class="text-[9px] md:text-[11px] font-semibold text-slate-200 mt-0.5 line-clamp-1 font-prompt">${tile.name}</span>
+                    <span class="absolute top-0.5 left-1 text-[8px] text-slate-400 font-mono">${idx}</span>
+                    <div id="pawnContainer_${idx}" class="absolute -bottom-1 flex flex-wrap justify-center gap-0.5 z-20 w-full px-1"></div>
+                `;
+
+                tileDiv.onclick = () => {
+                    logMessage(`📌 ช่องที่ ${idx}: ${tile.name}`, 'text-slate-300');
+                };
+
+                grid.appendChild(tileDiv);
+            });
+        }
+
+        function getPerimeterCoordinates(total) {
+            const list = [];
+            // Top side: 0..10
+            for (let c = 1; c <= 11; c++) list.push({ col: c, row: 1 });
+            // Right side: 11..17
+            for (let r = 2; r <= 8; r++) list.push({ col: 11, row: r });
+            // Bottom side: 18..28
+            for (let c = 10; c >= 1; c--) list.push({ col: c, row: 9 });
+            // Left side: 29..35
+            for (let r = 8; r >= 2; r--) list.push({ col: 1, row: r });
+
+            return list;
+        }
+
+        function renderBoardPawns() {
+            for (let i = 0; i < 36; i++) {
+                const container = document.getElementById(`pawnContainer_${i}`);
+                if (container) container.innerHTML = '';
+                const tileEl = document.getElementById(`tile_${i}`);
+                if (tileEl) tileEl.classList.remove('tile-active');
+            }
+
+            players.forEach(p => {
+                const container = document.getElementById(`pawnContainer_${p.position}`);
+                if (container) {
+                    const pSpan = document.createElement('span');
+                    pSpan.className = `player-pawn text-sm md:text-lg animate-bounce-short bg-slate-900/90 rounded-full p-0.5 border border-white/50 shadow-md`;
+                    pSpan.title = `${p.name} (${p.score.total} คะแนน)`;
+                    pSpan.innerText = p.icon;
+                    container.appendChild(pSpan);
+                }
+            });
+
+            if (players.length > 0) {
+                const curPos = players[currentTurnIndex].position;
+                const activeTile = document.getElementById(`tile_${curPos}`);
+                if (activeTile) activeTile.classList.add('tile-active');
+            }
+        }
+
+        function rollDice() {
+            if (isRolling || players.length === 0) return;
+            isRolling = true;
+            document.getElementById('btnRollDice').disabled = true;
+
+            playSound('dice');
+
+            const dice = document.getElementById('dice');
+            const rollValue = Math.floor(Math.random() * 6) + 1;
+
+            const xRot = (Math.floor(Math.random() * 4) + 4) * 360;
+            const yRot = (Math.floor(Math.random() * 4) + 4) * 360;
+
+            let targetX = 0, targetY = 0;
+            switch(rollValue) {
+                case 1: targetX = 0; targetY = 0; break;
+                case 2: targetX = 0; targetY = 180; break;
+                case 3: targetX = 0; targetY = 90; break;
+                case 4: targetX = 0; targetY = -90; break;
+                case 5: targetX = -90; targetY = 0; break;
+                case 6: targetX = 90; targetY = 0; break;
+            }
+
+            dice.style.transform = `rotateX(${xRot + targetX}deg) rotateY(${yRot + targetY}deg)`;
+
+            setTimeout(() => {
+                const cp = players[currentTurnIndex];
+                logMessage(`🎲 ${cp.name} ทอยได้แต้ม ${rollValue}`, 'text-amber-300 font-bold');
+                movePlayerStepByStep(cp, rollValue);
+            }, 1050);
+        }
+
+        async function movePlayerStepByStep(player, steps) {
+            for (let s = 0; s < steps; s++) {
+                player.position++;
+                
+                if (player.position >= 35) {
+                    player.position = 35;
+                    renderBoardPawns();
+                    playSound('correct');
+                    await new Promise(r => setTimeout(r, 300));
+                    break;
+                }
+
+                renderBoardPawns();
+                playSound('dice');
+                await new Promise(r => setTimeout(r, 220));
+            }
+
+            await handleTileLanding(player);
+        }
+
+        async function handleTileLanding(player) {
+            const tile = BOARD_TILES[player.position];
+            logMessage(`📍 ${player.name} ตกที่ช่อง [${tile.name}]`, 'text-cyan-300');
+
+            switch (tile.type) {
+                case 'QUESTION':
+                    triggerQuestionCard();
+                    break;
+
+                case 'MISSION':
+                    triggerMissionCard();
+                    break;
+
+                case 'TEST':
+                    triggerQuestionCard(true);
+                    break;
+
+                case 'BONUS':
+                    triggerBonusCard();
+                    break;
+
+                case 'FORWARD':
+                    logMessage(`⏩ เดินหน้า +2 ช่อง!`, 'text-emerald-400');
+                    await new Promise(r => setTimeout(r, 600));
+                    player.position = Math.min(35, player.position + 2);
+                    renderBoardPawns();
+                    finishTurn();
+                    break;
+
+                case 'BACKWARD':
+                    logMessage(`🔄 ถอยหลัง 1 ช่อง!`, 'text-rose-400');
+                    await new Promise(r => setTimeout(r, 600));
+                    player.position = Math.max(0, player.position - 1);
+                    renderBoardPawns();
+                    finishTurn();
+                    break;
+
+                case 'FITNESS':
+                    triggerFitnessChallenge();
+                    break;
+
+                case 'SUPER':
+                    player.score.bonus += 3;
+                    recalcScore(player);
+                    showBonusModal("SUPER SPORT! ⚡", "คุณได้รับคะแนนพลังพิเศษสปอร์ตโบนัส +3 คะแนนทันที!");
+                    break;
+
+                case 'RANDOM':
+                    if (Math.random() > 0.5) triggerQuestionCard();
+                    else triggerMissionCard();
+                    break;
+
+                case 'REST':
+                    logMessage(`🛌 ช่องพักผ่อน เติมพลังกาย สบายๆ`, 'text-slate-400');
+                    finishTurn();
+                    break;
+
+                case 'FINISH':
+                    playSound('fanfare');
+                    logMessage(`🏁 ${player.name} พิชิตเส้นชัย (FINISH) แล้ว!`, 'text-amber-300 font-extrabold');
+                    checkGameOver();
+                    break;
+
+                default:
+                    finishTurn();
+                    break;
+            }
+        }
+
+        function triggerQuestionCard(isTest = false) {
+            const randIdx = Math.floor(Math.random() * QUESTION_BANK.length);
+            currentQuestion = QUESTION_BANK[randIdx];
+
+            document.getElementById('questionTopic').innerText = `หมวด: ${currentQuestion.topic}`;
+            document.getElementById('questionText').innerText = currentQuestion.question;
+
+            const optsDiv = document.getElementById('questionOptions');
+            optsDiv.innerHTML = '';
+
+            currentQuestion.options.forEach((optText, i) => {
+                const btn = document.createElement('button');
+                btn.className = "w-full text-left p-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs md:text-sm text-slate-200 font-prompt transition flex items-center justify-between";
+                btn.innerHTML = `<span><strong>${String.fromCharCode(65 + i)}.</strong> ${optText}</span> <i class="fa-regular fa-circle text-slate-500"></i>`;
+                btn.onclick = () => answerQuestion(i, btn);
+                optsDiv.appendChild(btn);
+            });
+
+            document.getElementById('questionFeedback').className = "hidden p-3 rounded-xl text-xs md:text-sm font-prompt leading-relaxed mb-4";
+            document.getElementById('btnConfirmQuestion').classList.add('hidden');
+
+            openModal('questionModal');
+        }
+
+        function answerQuestion(selectedIdx, btnEl) {
+            const optsBtns = document.getElementById('questionOptions').querySelectorAll('button');
+            optsBtns.forEach(b => b.disabled = true);
+
+            const feedback = document.getElementById('questionFeedback');
+            feedback.classList.remove('hidden');
+
+            const cp = players[currentTurnIndex];
+
+            if (selectedIdx === currentQuestion.answer) {
+                playSound('correct');
+                btnEl.classList.replace('bg-slate-800', 'bg-emerald-600/80');
+                btnEl.classList.add('border-emerald-400');
+                feedback.className = "p-3 rounded-xl text-xs md:text-sm font-prompt leading-relaxed mb-4 bg-emerald-950/80 border border-emerald-500 text-emerald-200";
+                feedback.innerHTML = `<strong>ถูกต้องครับ! 🎉 (+2 คะแนน)</strong><br>${currentQuestion.explain}`;
+                
+                cp.score.knowledge += 2;
+                recalcScore(cp);
+                logMessage(`✅ ${cp.name} ตอบคำถามถูกต้อง (+2 คะแนน)`, 'text-emerald-400');
+            } else {
+                playSound('wrong');
+                btnEl.classList.replace('bg-slate-800', 'bg-rose-600/80');
+                btnEl.classList.add('border-rose-400');
+                
+                optsBtns[currentQuestion.answer].classList.replace('bg-slate-800', 'bg-emerald-700/60');
+
+                feedback.className = "p-3 rounded-xl text-xs md:text-sm font-prompt leading-relaxed mb-4 bg-rose-950/80 border border-rose-500 text-rose-200";
+                feedback.innerHTML = `<strong>ยังไม่ถูกต้องครับ! ❌</strong><br>${currentQuestion.explain}`;
+                logMessage(`❌ ${cp.name} ตอบคำถามยังไม่ถูกต้อง`, 'text-rose-400');
+            }
+
+            document.getElementById('btnConfirmQuestion').classList.remove('hidden');
+        }
+
+        function closeQuestionModal() {
+            closeModal('questionModal');
+            finishTurn();
+        }
+
+        function triggerMissionCard() {
+            const randIdx = Math.floor(Math.random() * MISSION_BANK.length);
+            currentMission = MISSION_BANK[randIdx];
+
+            document.getElementById('missionTitle').innerText = currentMission.title;
+            document.getElementById('missionDesc').innerText = currentMission.desc;
+            document.getElementById('missionIcon').className = `fa-solid ${currentMission.icon}`;
+
+            const timerBox = document.getElementById('timerContainer');
+            timerBox.classList.add('hidden');
+            document.getElementById('missionTimer').innerText = currentMission.time;
+
+            openModal('missionModal');
+        }
+
+        function startMissionTimer() {
+            let timeLeft = currentMission.time;
+            const timerBox = document.getElementById('timerContainer');
+            const timerEl = document.getElementById('missionTimer');
+            timerBox.classList.remove('hidden');
+
+            if (timerInterval) clearInterval(timerInterval);
+
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                timerEl.innerText = timeLeft;
+                playSound('dice');
+
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    playSound('correct');
+                    timerEl.innerText = "หมดเวลา!";
+                }
+            }, 1000);
+        }
+
+        function completeMission(isSuccess) {
+            if (timerInterval) clearInterval(timerInterval);
+            closeModal('missionModal');
+
+            const cp = players[currentTurnIndex];
+            if (isSuccess) {
+                playSound('correct');
+                cp.score.mission += 3;
+                recalcScore(cp);
+                logMessage(`💪 ${cp.name} ทำภารกิจทางกายสำเร็จ! (+3 คะแนน)`, 'text-emerald-400 font-bold');
+            } else {
+                logMessage(`⏩ ${cp.name} ข้ามภารกิจทางกาย`, 'text-slate-400');
+            }
+
+            finishTurn();
+        }
+
+        function triggerFitnessChallenge() {
+            const cp = players[currentTurnIndex];
+            cp.score.bonus += 5;
+            recalcScore(cp);
+            showBonusModal("FITNESS CHALLENGE! 🔥", "คุณได้ตกช่องความท้าทายพิเศษ รับโบนัสความสมบูรณ์แข็งแรงของร่างกาย +5 คะแนนเต็ม!");
+        }
+
+        function triggerBonusCard() {
+            const cp = players[currentTurnIndex];
+            const pts = Math.floor(Math.random() * 3) + 1;
+            cp.score.bonus += pts;
+            recalcScore(cp);
+            showBonusModal("โบนัสสุขภาพดี! ⭐", `คุณได้รับสิทธิ์โบนัสเพิ่ม +${pts} คะแนน!`);
+        }
+
+        function showBonusModal(title, msg) {
+            playSound('correct');
+            document.getElementById('bonusTitle').innerText = title;
+            document.getElementById('bonusMessage').innerText = msg;
+            openModal('bonusModal');
+        }
+
+        function closeBonusModal() {
+            closeModal('bonusModal');
+            finishTurn();
+        }
+
+        function recalcScore(player) {
+            player.score.total = player.score.knowledge + player.score.mission + player.score.bonus;
+            updateLeaderboard();
+        }
+
+        function finishTurn() {
+            const winner = players.find(p => p.position >= 35);
+            if (winner) {
+                checkGameOver();
+                return;
+            }
+
+            currentTurnIndex = (currentTurnIndex + 1) % players.length;
+            if (currentTurnIndex === 0) {
+                roundNumber++;
+                document.getElementById('roundCounter').innerText = `รอบที่ ${roundNumber}`;
+            }
+
+            updateTurnDisplay();
+            renderBoardPawns();
+
+            isRolling = false;
+            document.getElementById('btnRollDice').disabled = false;
+        }
+
+        function updateTurnDisplay() {
+            if (players.length === 0) return;
+            const cp = players[currentTurnIndex];
+            
+            const badge = document.getElementById('turnBadge');
+            badge.innerText = cp.icon;
+            badge.className = `w-12 h-12 rounded-2xl flex items-center justify-center text-2xl shadow-inner border-2 border-white/20 transition-all bg-gradient-to-tr ${cp.color}`;
+
+            document.getElementById('turnPlayerName').innerText = cp.name;
+        }
+
+        function updateLeaderboard() {
+            const list = document.getElementById('playersList');
+            if (!list) return;
+
+            const sorted = [...players].sort((a, b) => b.score.total - a.score.total);
+
+            document.getElementById('playerCountBadge').innerText = `${players.length} คน`;
+            if (sorted.length > 0) {
+                document.getElementById('leaderName').innerText = `${sorted[0].name} (${sorted[0].score.total}p)`;
+            }
+
+            list.innerHTML = '';
+            sorted.forEach((p, idx) => {
+                const div = document.createElement('div');
+                const isCurrent = (p.id === players[currentTurnIndex]?.id);
+                div.className = `p-3 rounded-2xl border transition-all ${isCurrent ? 'bg-slate-800 border-amber-400 shadow-md' : 'bg-slate-900/60 border-slate-800'}`;
+                
+                div.innerHTML = `
+                    <div class="flex items-center justify-between mb-1.5">
+                        <div class="flex items-center gap-2">
+                            <span class="w-6 h-6 rounded-lg bg-gradient-to-tr ${p.color} flex items-center justify-center text-xs shadow">${p.icon}</span>
+                            <span class="font-bold text-sm text-white font-prompt">${p.name} ${idx === 0 ? '👑' : ''}</span>
+                        </div>
+                        <span class="font-extrabold text-base text-amber-300 font-mono">${p.score.total} <span class="text-xs font-normal text-slate-400 font-prompt">คะแนน</span></span>
+                    </div>
+                    <div class="grid grid-cols-3 gap-1 text-[10px] text-slate-400 font-prompt text-center bg-slate-950/50 p-1.5 rounded-xl border border-slate-800/80">
+                        <div>❓ ความรู้: <strong class="text-cyan-400">${p.score.knowledge}</strong></div>
+                        <div>🏃 ภารกิจ: <strong class="text-emerald-400">${p.score.mission}</strong></div>
+                        <div>⭐ โบนัส: <strong class="text-amber-400">${p.score.bonus}</strong></div>
+                    </div>
+                `;
+                list.appendChild(div);
+            });
+        }
+
+        function checkGameOver() {
+            const sorted = [...players].sort((a, b) => b.score.total - a.score.total);
+            const winner = sorted[0];
+
+            document.getElementById('winnerTitleName').innerText = `${winner.name} ชนะเลิศ! 🎉`;
+
+            const finalContainer = document.getElementById('finalLeaderboardList');
+            finalContainer.innerHTML = '';
+
+            sorted.forEach((p, rank) => {
+                const row = document.createElement('div');
+                row.className = "flex items-center justify-between p-2.5 rounded-xl bg-slate-800/80 border border-slate-700 text-xs md:text-sm font-prompt";
+                row.innerHTML = `
+                    <div class="flex items-center gap-2">
+                        <span class="font-bold text-amber-400">อันดับ ${rank + 1}</span>
+                        <span>${p.icon} ${p.name}</span>
+                    </div>
+                    <span class="font-bold text-white">${p.score.total} คะแนน</span>
+                `;
+                finalContainer.appendChild(row);
+            });
+
+            openModal('winnerModal');
+
+            if (window.confetti) {
+                confetti({
+                    particleCount: 120,
+                    spread: 80,
+                    origin: { y: 0.6 }
+                });
+            }
+        }
+
+        function logMessage(text, colorClass = '') {
+            const logBox = document.getElementById('gameLog');
+            if (!logBox) return;
+
+            const p = document.createElement('p');
+            p.className = `leading-relaxed ${colorClass}`;
+            p.innerHTML = `<span class="text-slate-500">[${new Date().toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'})}]</span> ${text}`;
+            logBox.prepend(p);
+        }
+
+        function openModal(id) {
+            const modal = document.getElementById(id);
+            if (modal) modal.classList.remove('hidden');
+        }
+
+        function closeModal(id) {
+            const modal = document.getElementById(id);
+            if (modal) modal.classList.add('hidden');
+        }
+
+        function confirmReset() {
+            if (confirm("คุณต้องการเริ่มเกมใหม่ทั้งหมดใช่หรือไม่?")) {
+                openModal('setupModal');
+            }
+        }
+    </script>
+</body>
+</html>
